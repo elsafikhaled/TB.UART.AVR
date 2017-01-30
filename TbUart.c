@@ -5,23 +5,21 @@
  *      Author: El-safi
  */
 #include "TbUart.h"
-#include "TbUartCfg.h"
-#include <avr/io.h>
 /* ***************************************************************************************** */
 extern void TbUart_init(void){
 
 /*        UCSRB REGISTER      */
-UBRRL=BAUDRATE;             // baud rate 9600 from equation in datasheet
-UCSRB|=ENABLE_TX|ENABLE_RX;  // enable TX and RX modules in UART module
+UBRRL=(U8_t) 51;             // baud rate 9600 from equation in datasheet
+UCSRB|=(1<<TXEN)|(1<<RXEN);  // enable TX and RX modules in UART module
 UCSRB&=~(1<<UCSZ2);          // to make frame 8 bits with 2 bits in UCSRC register
 
 /*        UCSRC REGISTER      */
-UCSRC|=(1<<URSEL)|STOPBITS|FRAMBITS;    // to write this register as UCSRL ** as it may be UBBRH too
+UCSRC|=(1<<URSEL)|(1<<USBS)|(1<<UCSZ0)|(1<<UCSZ1);    // to write this register as UCSRL ** as it may be UBBRH too
                                                       // 2 stop bits
                                                       // frame of data 8 bits
 
 UCSRC &=~(1<<UMSEL);            // ASYNCHRONOUS mode
-UCSRC &=~NO_PARITY;             //no parity
+UCSRC &=~(1<<UPM1)|(1<<UPM0);   //no parity
 UCSRC&=~(1<<UCPOL);             // no clock as ASYNCHRONOUS mode
 }
 /* ******************************************************************************************* */
@@ -32,6 +30,16 @@ while(!(UCSRA &(1<<RXC)));
 	return UDR;
 }
 /* ******************************************************************************************** */
+U8_t TB_getchar_notWait(void){
+	U8_t val='0';
+	if((UCSRA &(1<<RXC)))
+	return UDR;
+	else{
+		return val;  // always equal zero
+	}
+}
+
+/* ******************************/
 extern void TbUart_Send_char(U8_t letter){
 
 	while(!(UCSRA&(1<<UDRE)));
@@ -49,7 +57,7 @@ extern void TbUart_Send_stri(U8_t *phrase){
 }
 /* ******************************************************************************************* */
 extern U8_t* TbUart_get_stri(void){
-     U8_t *strin;
+     U8_t *strin=(U8_t*)"0";
 	*strin=TbUart_get_char();
 
 	while(*strin!='\0'){
@@ -106,4 +114,22 @@ ret=counter;
 
 return ret;
 /* END OF CODE */
+}
+/* ****************************************** */
+void TB_intNumASCII(U16_t Number)
+{
+  char buffer[16]={0};
+  itoa(Number,(char*)buffer,10);
+  TbUart_Send_stri((U8_t*)buffer);
+
+}
+/* ****************************************** */
+U8_t TB_ASCII_INT(void){
+	U8_t arr[4]={0},num=0;
+	
+	for(index=0;index<=4;index++){
+		arr[index]=(U8_t)TbUart_get_char();
+	}
+	return(U8_t)((arr[0]-'0')*1000+(arr[1]-'0')*100+(arr[2]-'0')*10+(arr[3]-'0'));
+	
 }
