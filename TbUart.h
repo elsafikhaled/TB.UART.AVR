@@ -19,7 +19,7 @@ extern U8_t TbUart_get_char(void);
 
 U8_t TB_getchar_notWait(void);
 
-extern void TbUart_Send_stri(U8_t *phrase);
+extern void TbUart_Send_stri(signed char *phrase);
 
 extern U8_t* TbUart_get_stri(void);
 
@@ -28,6 +28,11 @@ U8_t string_compare_EKE(char array[],char *string_data);
 void string_copy_EKE(char *st_data,char *string_copy);
 
 U8_t string_length_EKE(char *s_data);
-void TB_intNumASCII(U16_t Number);
+void TB_intNumASCII(signed char Number);
+U8_t TB_ASCII_INT(void);
+
+void UART_SendDouble_void(double d,int precision);
+void dcon(char *buffer, double d, int precision);
+
 
 #endif /* TBUART_H_ */

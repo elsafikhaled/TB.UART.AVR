@@ -46,7 +46,7 @@ extern void TbUart_Send_char(U8_t letter){
 	UDR=letter;
 }
 /* ********************************************************************************************* */
-extern void TbUart_Send_stri(U8_t *phrase){
+extern void TbUart_Send_stri(signed char *phrase){
 
 	while(*phrase!='\0'){
 	     TbUart_Send_char(*phrase);
@@ -116,20 +116,87 @@ return ret;
 /* END OF CODE */
 }
 /* ****************************************** */
-void TB_intNumASCII(U16_t Number)
+void TB_intNumASCII(signed char Number)
 {
   char buffer[16]={0};
-  itoa(Number,(char*)buffer,10);
-  TbUart_Send_stri((U8_t*)buffer);
+  itoa(Number,( char*)buffer,10);
+  TbUart_Send_stri((signed char*)buffer);
 
 }
 /* ****************************************** */
 U8_t TB_ASCII_INT(void){
-	U8_t arr[4]={0},num=0;
+	U8_t arr[4]={0},index=0;
 	
 	for(index=0;index<=4;index++){
 		arr[index]=(U8_t)TbUart_get_char();
 	}
 	return(U8_t)((arr[0]-'0')*1000+(arr[1]-'0')*100+(arr[2]-'0')*10+(arr[3]-'0'));
 	
+}
+
+
+void dcon(char *buffer, double d, int precision)
+{
+
+	int wholePart = (int) d;    //wholepart is integer value from d
+
+	// Deposit the whole part of the number.
+
+	itoa(wholePart,buffer,10);
+
+	// Now work on the faction if we need one.
+
+	if (precision > 0) {
+
+		// We do, so locate the end of the string and insert
+		// a decimal point.
+
+		char *endOfString = buffer;
+		while (*endOfString != '\0') endOfString++;
+		*endOfString++ = '.';
+
+		// Now work on the fraction, be sure to turn any negative
+		// values positive.
+
+		if (d < 0) {
+			d *= -1;
+			wholePart *= -1;
+			if(wholePart==0){
+				strcpy(buffer,"-0.");
+				endOfString=buffer+3;
+			}
+		}
+
+		double fraction = d - wholePart;
+		while (precision > 0) {
+
+			// Multipleby ten and pull out the digit.
+
+			fraction *= 10;
+			wholePart = (long) fraction;
+			*endOfString++ = '0' + wholePart;
+
+			// Update the fraction and move on to the
+			// next digit.
+
+			fraction -= wholePart;
+			precision--;
+		}
+
+		// Terminate the string.
+
+		*endOfString = '\0';
+	}
+
+
+}
+
+void UART_SendDouble_void(double d,int precision){
+	char buffer[12]={0};
+	dcon(buffer,d,precision);
+	TbUart_Send_stri(buffer);
+
+
+
+
 }
